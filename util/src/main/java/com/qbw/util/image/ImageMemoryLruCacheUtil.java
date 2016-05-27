@@ -63,7 +63,9 @@ public class ImageMemoryLruCacheUtil {
                 @Override
                 protected void entryRemoved(boolean evicted, String key, Bitmap oldValue, Bitmap newValue) {
                     XLog.v(evicted ? key + ",removed to make space" : key + ",removed by a put or remove");
-                    oldValue.recycle();
+                    if (null != oldValue && !oldValue.isRecycled()) {
+                        oldValue.recycle();
+                    }
                 }
             };
             return mImageMemoryLruCacheUtil;
