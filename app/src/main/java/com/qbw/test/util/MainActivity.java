@@ -1,10 +1,12 @@
 package com.qbw.test.util;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 
 import com.qbw.log.XLog;
 import com.qbw.util.AppUtil;
@@ -12,10 +14,12 @@ import com.qbw.util.DeviceUtil;
 import com.qbw.util.FileUtil;
 import com.qbw.util.MatcherUtil;
 import com.qbw.util.NetUtil;
+import com.qbw.util.PhotoUtil;
 import com.qbw.util.ToastUtil;
 import com.qbw.util.image.BitmapUtil;
 import com.qbw.util.image.ImageDiskLruCacheUtil;
 import com.qbw.util.image.ImageMemoryLruCacheUtil;
+import com.qbw.util.image.ImageUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
         testCache();
         testMatch();
         //testCompress();
+        testImage();
     }
 
     private void showMemoryInfo() {
@@ -220,5 +225,82 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return b;
+    }
+
+    public void testImage() {
+        XLog.d(FileUtil.getDiskCacheDir(this).getAbsolutePath());
+        XLog.d(FileUtil.getFileDir(this).getAbsolutePath());
+        XLog.d(FileUtil.getGalleryDir().getAbsolutePath());
+        List<String> imageInfos = ImageUtil.getAllImagesPath(this);
+        XLog.line(true);
+        XLog.d("image cout=%d", null == imageInfos ? 0 : imageInfos.size());
+        for (String s : imageInfos) {
+            XLog.d(s);
+        }
+        XLog.line(false);
+
+        ImageUtil.getAllImagesPathAsync(this, mImageCallback);
+    }
+
+    private ImageUtil.CallBack mImageCallback = new ImageUtil.CallBack() {
+        @Override
+        public void onGetImageInfo(String imageInfo) {
+            XLog.d(imageInfo);
+        }
+    };
+
+    private PhotoUtil mPhotoUtil;
+
+    private PhotoUtil.CallBack mCallBack = new PhotoUtil.CallBack() {
+        @Override
+        public void onPhotoCamera(String photoPath) {
+            XLog.d(photoPath);
+        }
+
+        @Override
+        public void onPhotoGallery(String photoPath) {
+            XLog.d(photoPath);
+        }
+
+        @Override
+        public void onPhotoCrop(String photoPath) {
+            XLog.d(photoPath);
+        }
+
+        @Override
+        public void onPhotoCancel() {
+            XLog.d("onPhotoCancel");
+        }
+
+        @Override
+        public void onPhotoFailed() {
+            XLog.d("onPhotoFailed");
+        }
+    };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        mPhotoUtil.onActivityResult(this, requestCode, resultCode, data);
+    }
+
+    public void onCameraClick(View v) {
+        mPhotoUtil = new PhotoUtil(this, mCallBack);
+        mPhotoUtil.getPhotoFromCamera(this);
+    }
+
+    public void onCameraCropClick(View v) {
+        mPhotoUtil = new PhotoUtil(this, true, 140, 140, mCallBack);
+        mPhotoUtil.getPhotoFromCamera(this);
+    }
+
+    public void onGalleryClick(View v) {
+        mPhotoUtil = new PhotoUtil(this, mCallBack);
+        mPhotoUtil.getPhotoFromGallery(this);
+    }
+
+    public void onGalleryCropClick(View v) {
+        mPhotoUtil = new PhotoUtil(this, true, 140, 140, mCallBack);
+        mPhotoUtil.getPhotoFromGallery(this);
     }
 }
