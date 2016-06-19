@@ -6,7 +6,7 @@
 Gradle:
 
 
-compile 'com.qbw.util:util:1.1.0'
+compile 'com.qbw.util:util:1.1.2'
 
 
 # Author:

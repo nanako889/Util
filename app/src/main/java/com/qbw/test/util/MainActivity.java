@@ -249,22 +249,17 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private PhotoUtil mPhotoUtil;
-
     private PhotoUtil.CallBack mCallBack = new PhotoUtil.CallBack() {
         @Override
         public void onPhotoCamera(String photoPath) {
-            XLog.d(photoPath);
         }
 
         @Override
         public void onPhotoGallery(String photoPath) {
-            XLog.d(photoPath);
         }
 
         @Override
         public void onPhotoCrop(String photoPath) {
-            XLog.d(photoPath);
         }
 
         @Override
@@ -281,26 +276,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        mPhotoUtil.onActivityResult(this, requestCode, resultCode, data);
+        PhotoUtil.onActivityResult(this, requestCode, resultCode, data);
     }
 
     public void onCameraClick(View v) {
-        mPhotoUtil = new PhotoUtil(this, mCallBack);
-        mPhotoUtil.getPhotoFromCamera(this);
+        PhotoUtil.getPhotoFromCamera(this, FileUtil.getFileDir(this) + File.separator + "camera.jpg", mCallBack);
     }
 
     public void onCameraCropClick(View v) {
-        mPhotoUtil = new PhotoUtil(this, true, 140, 140, mCallBack);
-        mPhotoUtil.getPhotoFromCamera(this);
+        PhotoUtil.getPhotoFromCamera(this, FileUtil.getFileDir(this) + File.separator + "camera.jpg", 140, 140, FileUtil.getFileDir(this) + File.separator + "crop.jpg", mCallBack);
     }
 
     public void onGalleryClick(View v) {
-        mPhotoUtil = new PhotoUtil(this, mCallBack);
-        mPhotoUtil.getPhotoFromGallery(this);
+        PhotoUtil.getPhotoFromGallery(this, mCallBack);
     }
 
     public void onGalleryCropClick(View v) {
-        mPhotoUtil = new PhotoUtil(this, true, 140, 140, mCallBack);
-        mPhotoUtil.getPhotoFromGallery(this);
+        PhotoUtil.getPhotoFromGallery(this, 140, 140, FileUtil.getFileDir(this) + File.separator + "crop.jpg", mCallBack);
     }
 }

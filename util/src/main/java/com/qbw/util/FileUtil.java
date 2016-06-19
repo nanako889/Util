@@ -105,6 +105,7 @@ public class FileUtil {
         File file = new File(filePath);
         if (file.exists()) {
             b = file.delete();
+            XLog.d("delete %s %s", filePath, b ? "success" : "failed");
         } else {
             b = true;
             XLog.w("%s is not exist!", filePath);

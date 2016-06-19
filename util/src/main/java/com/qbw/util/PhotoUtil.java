@@ -1,7 +1,6 @@
 package com.qbw.util;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -23,76 +22,69 @@ public class PhotoUtil {
     /**
      * 是否需要裁剪图片
      */
-    private boolean mNeedCrop;
-    private int mCropWidth;
-    private int mCropHeight;
+    private static boolean sNeedCrop;
+    private static int sCropWidth;
+    private static int sCropHeight;
 
-    /**
-     * 图片保存的总目录
-     */
-    private String mPhotoSavePath;
 
     /**
      * 从相机获取图片的时候,图片保存到这个路径下面
      */
-    private String mPhotoCameraSavePath;
+    private static String sPhotoCameraSavePath;
 
     /**
      * 裁剪之后的图片保存在此路径
      */
-    private String mPhotoCropSavePath;
+    private static String sPhotoCropSavePath;
 
     /**
      * 保存请求值，用于删除相机产生的临时文件
      */
-    private int mRequestFrom;
+    private static int sRequestFrom;
 
-    private Context mContext;
-
-    private CallBack mCallBack;
-
-    public PhotoUtil(Context context, CallBack callBack) {
-        this(context, false, 0, 0, callBack);
-    }
-
-    public PhotoUtil(Context context, boolean needCrop, int cropWidth, int cropHeight, CallBack callBack) {
-        mContext = context;
-        mNeedCrop = needCrop;
-        mCropWidth = cropWidth;
-        mCropHeight = cropHeight;
-        mCallBack = callBack;
-
-        mPhotoSavePath = FileUtil.getFileDir(mContext).getAbsolutePath() + File.separator + "photo_pick";
-        XLog.d("mPhotoSavePath [%s]", mPhotoSavePath);
-        File file = new File(mPhotoSavePath);
-        if (!file.exists()) {
-            XLog.d("create dir [%s]", mPhotoSavePath);
-            file.mkdirs();
-        }
-        mPhotoCameraSavePath = mPhotoSavePath + File.separator + "camera.jpg";
-        XLog.d("mPhotoCameraSavePath [%s]", mPhotoCameraSavePath);
-    }
+    private static CallBack sCallBack;
 
     /**
      * 从相机获取图片
-     *
-     * @param activity
      */
-    public void getPhotoFromCamera(Activity activity) {
+    public static void getPhotoFromCamera(Activity activity, String photoCameraSavePath, int cropWidth, int cropHeight, String photoCropSavePath, CallBack callBack) {
+        sPhotoCameraSavePath = photoCameraSavePath;
+        sNeedCrop = 0 != cropWidth && 0 != cropHeight;
+        sCropWidth = cropWidth;
+        sCropHeight = cropHeight;
+        sPhotoCropSavePath = photoCropSavePath;
+        sCallBack = callBack;
+
+        XLog.d("photoCameraSavePath[%s], sNeedCrop[%b], cropWidth[%d], cropHeight[%d], photoCropSavePath[%s]", photoCameraSavePath, sNeedCrop, cropWidth, cropHeight, photoCropSavePath);
+
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(mPhotoCameraSavePath)));
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(photoCameraSavePath)));
         activity.startActivityForResult(intent, REQUEST_FROM_CAMERA);
+    }
+
+    public static void getPhotoFromCamera(Activity activity, String photoCameraSavePath, CallBack callBack) {
+        getPhotoFromCamera(activity, photoCameraSavePath, 0, 0, "", callBack);
     }
 
     /**
      * 从图库获取图片
-     *
-     * @param activity
      */
-    public void getPhotoFromGallery(Activity activity) {
+    public static void getPhotoFromGallery(Activity activity, int cropWidth, int cropHeight, String photoCropSavePath, CallBack callBack) {
+        sNeedCrop = 0 != cropWidth && 0 != cropHeight;
+        sCropWidth = cropWidth;
+        sCropHeight = cropHeight;
+        sPhotoCropSavePath = photoCropSavePath;
+        sCallBack = callBack;
+
+        XLog.d("sNeedCrop[%b], cropWidth[%d], cropHeight[%d], photoCropSavePath[%s]", sNeedCrop, cropWidth, cropHeight, photoCropSavePath);
+
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
         activity.startActivityForResult(intent, REQUEST_FROM_GALLERY);
+    }
+
+    public static void getPhotoFromGallery(Activity activity, CallBack callBack) {
+        getPhotoFromGallery(activity, 0, 0, "", callBack);
     }
 
     /**
@@ -102,20 +94,18 @@ public class PhotoUtil {
      * @author qinbaowei
      * @version 创建时间 2015-10-16
      */
-    public void cropPhoto(Activity activity, Uri uri, String photoFormat) {
+    public static void cropPhoto(Activity activity, Uri uri, String photoFormat) {
         Intent intent = new Intent("com.android.camera.action.CROP");
         intent.setDataAndType(uri, "image/*");
         intent.putExtra("crop", "true");
         intent.putExtra("scale", "true");
         intent.putExtra("aspectX", 1);
         intent.putExtra("aspectY", 1);
-        intent.putExtra("outputX", mCropWidth);
-        intent.putExtra("outputY", mCropHeight);
+        intent.putExtra("outputX", sCropWidth);
+        intent.putExtra("outputY", sCropHeight);
         intent.putExtra("outputFormat", photoFormat);
         intent.putExtra("return-data", false);
-        mPhotoCropSavePath = String.format("%s%s%d.%s", mPhotoSavePath, File.separator, System.currentTimeMillis(), photoFormat);
-        XLog.d("mPhotoCropSavePath [%s]", mPhotoCropSavePath);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(mPhotoCropSavePath)));
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(sPhotoCropSavePath)));
         intent.putExtra("noFaceDetection", true);
         activity.startActivityForResult(intent, REQUEST_CROP);
     }
@@ -129,20 +119,20 @@ public class PhotoUtil {
      * @author qinbaowei
      * @version 创建时间 2015-10-16
      */
-    public void onActivityResult(Activity activity, int requestCode,
-                                 int resultCode, Intent intent) {
+    public static void onActivityResult(Activity activity, int requestCode,
+                                        int resultCode, Intent intent) {
         switch (resultCode) {
             case Activity.RESULT_OK:
                 onActivityResultOk(activity, requestCode, intent);
                 break;
             case Activity.RESULT_CANCELED:
-                mCallBack.onPhotoCancel();
+                sCallBack.onPhotoCancel();
                 break;
             case Activity.RESULT_FIRST_USER:
                 // Start of user-defined activity results
                 break;
             default:
-                mCallBack.onPhotoFailed();
+                sCallBack.onPhotoFailed();
                 break;
         }
     }
@@ -155,33 +145,31 @@ public class PhotoUtil {
      * @author qinbaowei
      * @version 创建时间 2015-10-16
      */
-    private void onActivityResultOk(Activity activity, int requestCode, Intent intent) {
+    private static void onActivityResultOk(Activity activity, int requestCode, Intent intent) {
         if (REQUEST_FROM_CAMERA == requestCode) {
-            XLog.d("get photo from camera");
-            mRequestFrom = requestCode;
-            if (mNeedCrop) {
-                cropPhoto(activity, Uri.fromFile(new File(mPhotoCameraSavePath)), "jpg");
+            sRequestFrom = requestCode;
+            if (sNeedCrop) {
+                cropPhoto(activity, Uri.fromFile(new File(sPhotoCameraSavePath)), "jpg");
             } else {
-                mCallBack.onPhotoCamera(mPhotoCameraSavePath);
+                sCallBack.onPhotoCamera(sPhotoCameraSavePath);
             }
         } else if (REQUEST_FROM_GALLERY == requestCode) {
-            XLog.d("get photo from gallery");
-            mRequestFrom = requestCode;
+            sRequestFrom = requestCode;
             if (null != intent && null != intent.getData()) {
                 String imagePath = ImageUtil.getImagePath(activity, intent.getData());
                 XLog.d("pick image[%s] from gallery", imagePath);
-                if (mNeedCrop) {
+                if (sNeedCrop) {
                     cropPhoto(activity, intent.getData(), FileUtil.getFileExtensionFromPath(imagePath));
                 } else {
-                    mCallBack.onPhotoGallery(imagePath);
+                    sCallBack.onPhotoGallery(imagePath);
                 }
             } else {
-                mCallBack.onPhotoFailed();
+                sCallBack.onPhotoFailed();
             }
         } else if (REQUEST_CROP == requestCode) {
-            mCallBack.onPhotoCrop(mPhotoCropSavePath);
-            if (mRequestFrom == REQUEST_FROM_CAMERA) {
-                FileUtil.deleteFile(mPhotoCameraSavePath);
+            sCallBack.onPhotoCrop(sPhotoCropSavePath);
+            if (sRequestFrom == REQUEST_FROM_CAMERA) {
+                FileUtil.deleteFile(sPhotoCameraSavePath);
             }
         }
     }
