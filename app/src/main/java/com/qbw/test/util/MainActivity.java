@@ -280,11 +280,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onCameraClick(View v) {
-        PhotoUtil.getPhotoFromCamera(this, FileUtil.getFileDir(this) + File.separator + "camera.jpg", mCallBack);
+        //PhotoUtil.getPhotoFromCamera(this, FileUtil.getFileDir(this) + File.separator + "camera.jpg", mCallBack);
+        PhotoUtil.getPhotoFromCamera(this, mCallBack);
     }
 
     public void onCameraCropClick(View v) {
-        PhotoUtil.getPhotoFromCamera(this, FileUtil.getFileDir(this) + File.separator + "camera.jpg", 140, 140, FileUtil.getFileDir(this) + File.separator + "crop.jpg", mCallBack);
+        //PhotoUtil.getPhotoFromCamera(this, FileUtil.getFileDir(this) + File.separator + "camera.jpg", 140, 140, FileUtil.getFileDir(this) + File.separator + "crop.%s", mCallBack);
+        PhotoUtil.getPhotoFromCamera(this, 140, 140, mCallBack);
     }
 
     public void onGalleryClick(View v) {
@@ -292,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onGalleryCropClick(View v) {
-        PhotoUtil.getPhotoFromGallery(this, 140, 140, FileUtil.getFileDir(this) + File.separator + "crop.jpg", mCallBack);
+        //PhotoUtil.getPhotoFromGallery(this, 140, 140, FileUtil.getFileDir(this) + File.separator + "crop.%s", mCallBack);
+        PhotoUtil.getPhotoFromGallery(this, 140, 140, mCallBack);
     }
 }

@@ -33,8 +33,9 @@ public class PhotoUtil {
     private static String sPhotoCameraSavePath;
 
     /**
-     * 裁剪之后的图片保存在此路径
+     * 裁剪之后的图片保存在此路径格式
      */
+    private static String sPhotoCropSavePathFormat;
     private static String sPhotoCropSavePath;
 
     /**
@@ -47,15 +48,15 @@ public class PhotoUtil {
     /**
      * 从相机获取图片
      */
-    public static void getPhotoFromCamera(Activity activity, String photoCameraSavePath, int cropWidth, int cropHeight, String photoCropSavePath, CallBack callBack) {
+    public static void getPhotoFromCamera(Activity activity, String photoCameraSavePath, int cropWidth, int cropHeight, String photoCropSavePathFormat, CallBack callBack) {
         sPhotoCameraSavePath = photoCameraSavePath;
         sNeedCrop = 0 != cropWidth && 0 != cropHeight;
         sCropWidth = cropWidth;
         sCropHeight = cropHeight;
-        sPhotoCropSavePath = photoCropSavePath;
+        sPhotoCropSavePathFormat = photoCropSavePathFormat;
         sCallBack = callBack;
 
-        XLog.d("photoCameraSavePath[%s], sNeedCrop[%b], cropWidth[%d], cropHeight[%d], photoCropSavePath[%s]", photoCameraSavePath, sNeedCrop, cropWidth, cropHeight, photoCropSavePath);
+        XLog.d("photoCameraSavePath[%s], sNeedCrop[%b], cropWidth[%d], cropHeight[%d]", photoCameraSavePath, sNeedCrop, cropWidth, cropHeight);
 
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(photoCameraSavePath)));
@@ -66,17 +67,27 @@ public class PhotoUtil {
         getPhotoFromCamera(activity, photoCameraSavePath, 0, 0, "", callBack);
     }
 
+    public static void getPhotoFromCamera(Activity activity, int cropWidth, int cropHeight, CallBack callBack) {
+        String headerPath = FileUtil.getFileDir(activity) + File.separator + "camera.jpg";
+        String cropPath = FileUtil.getFileDir(activity) + File.separator + "crop.%s";
+        getPhotoFromCamera(activity, headerPath, cropWidth, cropHeight, cropPath, callBack);
+    }
+
+    public static void getPhotoFromCamera(Activity activity, CallBack callBack) {
+        getPhotoFromCamera(activity, 0, 0, callBack);
+    }
+
     /**
      * 从图库获取图片
      */
-    public static void getPhotoFromGallery(Activity activity, int cropWidth, int cropHeight, String photoCropSavePath, CallBack callBack) {
+    public static void getPhotoFromGallery(Activity activity, int cropWidth, int cropHeight, String photoCropSavePathFormat, CallBack callBack) {
         sNeedCrop = 0 != cropWidth && 0 != cropHeight;
         sCropWidth = cropWidth;
         sCropHeight = cropHeight;
-        sPhotoCropSavePath = photoCropSavePath;
+        sPhotoCropSavePathFormat = photoCropSavePathFormat;
         sCallBack = callBack;
 
-        XLog.d("sNeedCrop[%b], cropWidth[%d], cropHeight[%d], photoCropSavePath[%s]", sNeedCrop, cropWidth, cropHeight, photoCropSavePath);
+        XLog.d("sNeedCrop[%b], cropWidth[%d], cropHeight[%d]", sNeedCrop, cropWidth, cropHeight);
 
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
@@ -87,6 +98,11 @@ public class PhotoUtil {
         getPhotoFromGallery(activity, 0, 0, "", callBack);
     }
 
+    public static void getPhotoFromGallery(Activity activity, int cropWidth, int cropHeight, CallBack callBack) {
+        String cropPath = FileUtil.getFileDir(activity) + File.separator + "crop.%s";
+        getPhotoFromGallery(activity, cropWidth, cropHeight, cropPath, callBack);
+    }
+
     /**
      * 裁剪照片
      *
@@ -95,6 +111,7 @@ public class PhotoUtil {
      * @version 创建时间 2015-10-16
      */
     public static void cropPhoto(Activity activity, Uri uri, String photoFormat) {
+        XLog.v("uri=%s, photoFormat=%s", uri.toString(), photoFormat);
         Intent intent = new Intent("com.android.camera.action.CROP");
         intent.setDataAndType(uri, "image/*");
         intent.putExtra("crop", "true");
@@ -105,6 +122,7 @@ public class PhotoUtil {
         intent.putExtra("outputY", sCropHeight);
         intent.putExtra("outputFormat", photoFormat);
         intent.putExtra("return-data", false);
+        sPhotoCropSavePath = String.format(sPhotoCropSavePathFormat, photoFormat);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(sPhotoCropSavePath)));
         intent.putExtra("noFaceDetection", true);
         activity.startActivityForResult(intent, REQUEST_CROP);
@@ -167,6 +185,7 @@ public class PhotoUtil {
                 sCallBack.onPhotoFailed();
             }
         } else if (REQUEST_CROP == requestCode) {
+            XLog.d("crop save path %s", sPhotoCropSavePath);
             sCallBack.onPhotoCrop(sPhotoCropSavePath);
             if (sRequestFrom == REQUEST_FROM_CAMERA) {
                 FileUtil.deleteFile(sPhotoCameraSavePath);
