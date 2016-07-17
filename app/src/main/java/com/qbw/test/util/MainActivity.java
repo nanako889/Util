@@ -38,11 +38,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         XLog.setDebug(true);
-        showMemoryInfo();
-        testApp();
-        testUi();
-        testCache();
-        testMatch();
+        XLog.setSaveToFile("util");
+//        showMemoryInfo();
+//        testApp();
+//        testUi();
+//        testCache();
+//        testMatch();
         //testCompress();
         testImage();
     }
@@ -230,6 +231,8 @@ public class MainActivity extends AppCompatActivity {
     public void testImage() {
         XLog.d(FileUtil.getDiskCacheDir(this).getAbsolutePath());
         XLog.d(FileUtil.getFileDir(this).getAbsolutePath());
+        XLog.d(getCacheDir().getAbsolutePath());
+        XLog.d(getFilesDir().getAbsolutePath());
         XLog.d(FileUtil.getGalleryDir().getAbsolutePath());
         List<String> imageInfos = ImageUtil.getAllImagesPath(this);
         XLog.line(true);

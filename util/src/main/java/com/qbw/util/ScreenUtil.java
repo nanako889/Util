@@ -58,10 +58,9 @@ public class ScreenUtil {
      */
     public static Point getRealSize(Context context) {
         Point screenSize = new Point();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
             screenSize = getSize(context);
         } else {
-            //这个api是版本17添加的,用19做判断是因为在版本19以上(包括19)才会去隐藏虚拟按键(版本16~19无法悬浮虚拟按键所以这些版本不做处理)
             ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealSize(screenSize);
         }
         XLog.v(String.format("screen size[%d, %d]", screenSize.x, screenSize.y));
